@@ -31,6 +31,13 @@
 - 检测改为按钮式流程：按下开始检测 → 检测到后开始打歌 → 自动停止检测
 - 支持“检测到后延迟开始”（可调 ms）
 
+![自动开始校准与检测](/imgs/vision_autostart.png "Vision Auto-Start")
+
+自动开始使用说明（推荐流程）：
+- 进入 Play Control，先完成载入到 READY
+- 调整 Detection Y / Detection X / 点间距，把 7 个检测框对齐判定线 7 轨
+- 点击“开始检测”，检测到开局白点后会按你设置的“开始延迟”自动开始
+
 ### 其他
 - “不全连/提前结束”选项：可在接近结尾时提前停止（可调提前时间）
 - 新增 UI 文案已加入多语言（简中/繁中/日/英）
@@ -48,6 +55,11 @@
 - **Now Playing card** — jacket art, song title, band, difficulty, all in one glance
 - **Interrupt & restart instantly** — hit Stop, then Start again without re-loading anything
 - **Offset adjustment** — fine-tune timing on the fly with keyboard shortcuts
+
+### ✨ Auto-Start (Vision)
+![Vision Auto-Start](/imgs/vision_autostart.png "Vision Auto-Start")
+- Calibrate 7 markers (Y / X / spacing) on the judgement line
+- Click Start Detect, once the opening note is detected it will auto-start then stop detecting
 
 
 ## Requirements 
