@@ -1,0 +1,298 @@
+name: Build & Release SSM-GUI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build_on_linux_amd64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Version
+        id: version
+        run: |
+          version=$(echo $GITHUB_REF | cut -d"/" -f3 | sed 's/v//g')
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libusb-dev libusb-1.0-0-dev libavformat-dev libavcodec-dev libavutil-dev
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.24
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Frontend
+        run: |
+          cd gui/frontend
+          npm install
+          npm run build
+
+      - name: Build
+        run: |
+          go build -ldflags "-X main.SSM_VERSION=$VERSION" -o ssm-gui
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssm-gui-linux-${{ steps.version.outputs.version }}-amd64
+          path: ./ssm-gui
+
+  build_on_linux_arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Version
+        id: version
+        run: |
+          version=$(echo $GITHUB_REF | cut -d"/" -f3 | sed 's/v//g')
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libusb-dev libusb-1.0-0-dev libavformat-dev libavcodec-dev libavutil-dev
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.24
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Frontend
+        run: |
+          cd gui/frontend
+          npm install
+          npm run build
+
+      - name: Build
+        run: |
+          go build -ldflags "-X main.SSM_VERSION=$VERSION" -o ssm-gui
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssm-gui-linux-${{ steps.version.outputs.version }}-arm64
+          path: ./ssm-gui
+
+  build_on_windows_amd64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Version
+        id: version
+        shell: bash
+        run: |
+          version=$(echo $GITHUB_REF | cut -d"/" -f3 | sed 's/v//g')
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.24
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Frontend
+        shell: pwsh
+        run: |
+          cd gui/frontend
+          npm install
+          npm run build
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syu"
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-gcc"
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-pkgconf"
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-libusb"
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-ffmpeg"
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-ntldd"
+
+      - name: Build
+        env:
+          PKG_CONFIG_PATH: C:\msys64\mingw64\lib\pkgconfig;C:\msys64\msys64\mingw64\share\pkgconfig
+        run: |
+          $env:PATH = "C:\msys64\mingw64\bin;" + $env:PATH
+          go build -ldflags "-X main.SSM_VERSION=$env:VERSION" -o ssm-gui.exe
+
+      - name: Copy exe and dlls
+        shell: bash
+        run: |
+          mkdir build
+          cp ./ssm-gui.exe ./build/
+          for dll in $(/c/msys64/mingw64/bin/ntldd.exe -R ./ssm-gui.exe | awk '{ if ($3 ~ /^C:\\msys64/) print $3; }'); do
+            cp -v $dll ./build/
+          done
+
+      - name: Upload Artifact (Full)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssm-gui-windows-${{ steps.version.outputs.version }}-full-amd64
+          path: ./build/
+
+      - name: Upload Artifact (Executable only)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssm-gui-windows-${{ steps.version.outputs.version }}-exe-only-amd64
+          path: ./ssm-gui.exe
+
+  build_on_macos_amd64:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Version
+        id: version
+        shell: bash
+        run: |
+          version=$(echo $GITHUB_REF | cut -d"/" -f3 | sed 's/v//g')
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          brew install ffmpeg libusb
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.24
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Frontend
+        run: |
+          cd gui/frontend
+          npm install
+          npm run build
+
+      - name: Build
+        run: |
+          go build -ldflags "-X main.SSM_VERSION=$VERSION" -o ssm-gui
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssm-gui-darwin-${{ steps.version.outputs.version }}-amd64
+          path: ./ssm-gui
+
+  build_on_macos_arm64:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Version
+        id: version
+        shell: bash
+        run: |
+          version=$(echo $GITHUB_REF | cut -d"/" -f3 | sed 's/v//g')
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          brew install ffmpeg libusb
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.24
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Frontend
+        run: |
+          cd gui/frontend
+          npm install
+          npm run build
+
+      - name: Build
+        run: |
+          go build -ldflags "-X main.SSM_VERSION=$VERSION" -o ssm-gui
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssm-gui-darwin-${{ steps.version.outputs.version }}-arm64
+          path: ./ssm-gui
+
+  github_release:
+    runs-on: ubuntu-22.04
+    needs:
+      - build_on_linux_amd64
+      - build_on_linux_arm64
+      - build_on_windows_amd64
+      - build_on_macos_amd64
+      - build_on_macos_arm64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Version
+        shell: bash
+        run: |
+          version=$(echo $GITHUB_REF | cut -d"/" -f3 | sed 's/v//g')
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: builds/
+
+      - name: Compress Artifacts
+        shell: bash
+        run: |
+          cd builds
+          for dir in */; do
+            zip -r "${dir%/}.zip" "$dir"
+          done
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --generate-notes \
+            builds/*.zip

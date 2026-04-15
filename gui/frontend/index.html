@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="src/assets/icon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SSM — Star Stone Miner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="antialiased">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-top">
+        <div class="logo">SSM</div>
+        <div class="top-actions">
+          <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+            <span id="theme-ico">☾</span>
+          </button>
+          <div class="lang-picker" id="lang-picker">
+            <button
+              class="lang-btn border border-ssm-border bg-ssm-bg rounded-lg px-2 py-1 text-sm text-white flex items-center gap-1 hover:bg-[#2a2a2a] transition-all duration-300 shadow-sm active:scale-95"
+              id="lang-btn" onclick="toggleLangMenu()">
+              <span class="lb-name font-bold tracking-wider" id="lb-name">EN</span>
+              <span class="lb-arrow text-ssm-muted">▾</span>
+            </button>
+            <div class="lang-menu" id="lang-menu"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-sec" data-i18n="nav.menu">Menu</div>
+      <button class="nav-btn active" id="nav-song" onclick="nav('song')">
+        <span class="ico">♪</span><span data-i18n="nav.song">Song Setup</span>
+      </button>
+      <button class="nav-btn" id="nav-play" onclick="nav('play')">
+        <span class="ico">▶</span><span data-i18n="nav.play">Play Control</span>
+      </button>
+      <button class="nav-btn" id="nav-settings" onclick="nav('settings')">
+        <span class="ico">⚙</span><span data-i18n="nav.settings">Settings</span>
+      </button>
+      <button class="nav-btn" id="nav-extract" onclick="nav('extract')">
+        <span class="ico">📦</span><span data-i18n="nav.extract">Extract Assets</span>
+      </button>
+
+      <div
+        class="np-card mt-auto bg-[#18181b] p-3 rounded-xl border border-ssm-border flex flex-col shadow-lg relative overflow-hidden"
+        id="np-card" style="display:none">
+
+        <div class="np-main flex items-center gap-3">
+          <div class="np-cover w-12 h-12 bg-[#121212] rounded-md overflow-hidden shrink-0 border border-ssm-border/50 flex items-center justify-center shadow-sm">
+            <img id="np-img" src="" alt="" class="w-full h-full object-cover"
+              onerror="this.style.display='none';document.getElementById('np-no').style.display='flex'">
+            <div class="text-ssm-muted font-bold text-lg" id="np-no" style="display:none">♪</div>
+          </div>
+          <div class="np-text flex-1 min-w-0">
+            <div class="text-[13px] font-bold text-white leading-tight" id="np-title">—</div>
+            <div class="text-[11px] text-ssm-muted mt-1" id="np-artist"></div>
+          </div>
+        </div>
+
+        <div class="np-meta-row mt-3 pt-2 border-t border-[#333333]">
+          <div class="np-diff-row flex items-center gap-2">
+            <span class="np-diff !px-1.5 !py-0.5" id="np-diff"></span>
+            <span class="text-[11px] font-mono font-bold text-ssm-hint" id="np-lv"></span>
+          </div>
+          <div class="np-state-row flex items-center mt-2">
+            <div class="viz-bar" id="vbar" aria-hidden="true">
+              <span style="--h:10px;--d:0.7s"></span><span style="--h:22px;--d:0.5s"></span>
+              <span style="--h:16px;--d:0.9s"></span><span style="--h:28px;--d:0.6s"></span>
+              <span style="--h:12px;--d:0.8s"></span><span style="--h:24px;--d:0.55s"></span>
+              <span style="--h:18px;--d:0.7s"></span><span style="--h:8px;--d:0.65s"></span>
+              <span style="--h:26px;--d:0.9s"></span><span style="--h:14px;--d:0.75s"></span>
+              <span style="--h:20px;--d:0.5s"></span><span style="--h:28px;--d:0.6s"></span>
+              <span style="--h:10px;--d:0.8s"></span><span style="--h:18px;--d:0.7s"></span>
+              <span style="--h:24px;--d:0.55s"></span><span style="--h:14px;--d:0.9s"></span>
+              <span style="--h:28px;--d:0.65s"></span><span style="--h:8px;--d:0.75s"></span>
+            </div>
+            <span id="np-state-txt" class="np-state-a11y"></span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="main">
+
+      <div class="pane active song-setup" id="pane-song">
+        <div class="pg-title" data-i18n="nav.song">Song Setup</div>
+
+        <div class="song-top-grid">
+          <div class="card song-card mode-card">
+            <div class="ct" data-i18n="song.mode">Game Mode</div>
+            <div class="bg mode-bg">
+              <div class="bc active" id="mode-bang" onclick="setMode('bang')">
+                <div class="bcn">BanG Dream!</div>
+                <div class="bcs" data-i18n="song.mode.bang">Girls Band Party</div>
+              </div>
+              <div class="bc" id="mode-pjsk" onclick="setMode('pjsk')">
+                <div class="bcn">Project Sekai</div>
+                <div class="bcs" data-i18n="song.mode.pjsk">Colorful Stage!</div>
+              </div>
+            </div>
+          </div>
+          <div class="card song-card">
+            <div class="ct flex items-center justify-between">
+              <span data-i18n="song.backend">Backend & Connection</span>
+              <div id="hid-warn-box" data-i18n="song.backend.hid_warn"
+                class="text-[10px] bg-red-950/20 text-red-400 p-2.5 rounded-lg border border-red-900/30 leading-relaxed font-medium">
+              </div>
+            </div>
+
+            <div class="bg">
+              <div class="bc" id="backend-hid" onclick="setBackend('hid')">
+                <div class="bcn">HID</div>
+              </div>
+              <div class="bc active" id="backend-adb" onclick="setBackend('adb')">
+                <div class="bcn">ADB</div>
+              </div>
+            </div>
+
+            <div class="field !mb-4">
+              <div class="flex items-end justify-between mb-2">
+                <label class="!mb-0" data-i18n="song.serial.label">Device serial</label>
+                <button
+                  class="auto-detect-btn text-[10px] bg-[#27272a] text-blue-400 hover:bg-blue-600 hover:text-white px-2 py-1 rounded border border-[#3f3f46] transition-all font-bold flex items-center gap-1 active:scale-95"
+                  onclick="autoDetectDevice()">
+                  🔍 Auto Detect
+                </button>
+              </div>
+
+              <div class="sw relative">
+                <input type="text" id="dev-serial" autocomplete="off" class="pr-10">
+                <button
+                  class="sc absolute right-3 top-1/2 -translate-y-1/2 text-ssm-muted hover:text-white transition-colors"
+                  id="btn-dev-drop" onclick="toggleDevDrop(event)">▾</button>
+                <div class="drop" id="dev-drop"></div>
+              </div>
+            </div>
+
+            <div id="orient-wrap" class="field !mb-0">
+              <label data-i18n="song.orient">Screen rotation (HID only)</label>
+              <div class="grid grid-cols-2 gap-3 mt-2">
+                <button class="bc active !p-3 flex items-center justify-center" id="ol" onclick="setOrient('left')">
+                  <div class="bcs !text-sm !font-bold" data-i18n="song.orient.left">↺ CCW</div>
+                </button>
+                <button class="bc !p-3 flex items-center justify-center" id="or" onclick="setOrient('right')">
+                  <div class="bcs !text-sm !font-bold" data-i18n="song.orient.right">↻ CW</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card song-search-card">
+          <div class="ct" data-i18n="song.search">Song Search</div>
+          <div
+            class="sel-bar mb-4 flex items-center gap-3 bg-ssm-blue-bg p-3 rounded-xl border border-ssm-blue/30 text-white"
+            id="sel-bar" style="display: none;">
+            <span class="sb-id text-ssm-blue font-mono font-bold" id="sb-id"></span>
+            <span class="sb-title flex-1 font-bold" id="sb-title"></span>
+            <button class="sb-x text-ssm-hint hover:text-white transition-colors" onclick="clearSong()">✕</button>
+          </div>
+
+          <div class="field">
+            <label data-i18n="song.search.label">Search by name</label>
+            <div class="sw relative">
+              <input type="text" id="q" data-i18n-placeholder="song.search.placeholder" autocomplete="off"
+                oninput="onQInput()" onkeydown="onQKey(event)" onfocus="onQFocus()">
+              <button
+                class="sc absolute right-3 top-1/2 -translate-y-1/2 text-ssm-muted hover:text-white transition-colors"
+                id="sc" onclick="clearQ()">✕</button>
+              <div class="drop" id="drop"></div>
+            </div>
+          </div>
+
+          <div class="song-input-grid">
+            <div class="field">
+              <label data-i18n="song.id.label">Or enter Song ID directly</label>
+              <input type="number" id="song-id" data-i18n-placeholder="song.id.placeholder" min="1"
+                oninput="onManualId()">
+            </div>
+
+            <div class="field">
+              <label data-i18n="song.chart.label">Custom chart path</label>
+              <input type="text" id="chart-path" data-i18n-placeholder="song.chart.placeholder">
+            </div>
+          </div>
+
+          <div class="field !mb-0">
+            <label data-i18n="song.diff">Difficulty</label>
+            <div class="diff-row">
+              <button class="db easy" onclick="setDiff(0)">EASY</button>
+              <button class="db normal" onclick="setDiff(1)">NORMAL</button>
+              <button class="db hard" onclick="setDiff(2)">HARD</button>
+              <button class="db expert active" onclick="setDiff(3)">EXPERT</button>
+              <button class="db special" onclick="setDiff(4)">SPECIAL</button>
+              <button class="db append" onclick="setDiff(5)">APPEND</button>
+            </div>
+          </div>
+        </div>
+        <button class="btn pri btn-b" onclick="submitRun()" data-i18n="song.load">▶ Load &amp; Prepare</button>
+        <div class="log" id="song-log"></div>
+      </div>
+
+      <div class="pane" id="pane-settings">
+        <div class="pg-title" data-i18n="nav.settings">Settings</div>
+        <div class="card">
+          <div class="ct" data-i18n="settings.device">Device Management</div>
+          <div id="dev-list">
+            <div style="font-size:12px;color:var(--color-ssm-hint)" data-i18n="device.loading">Loading...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct" data-i18n="device.add">Add / Update Device</div>
+          <div class="step flex items-start gap-3 mb-4">
+            <div
+              class="sn w-6 h-6 bg-[#333] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+              1</div>
+            <div class="st text-sm text-ssm-muted" data-i18n="device.step1">Hold phone in portrait.</div>
+          </div>
+          <div class="row grid grid-cols-3 gap-4 mb-4">
+            <div class="field !mb-0"><label data-i18n="device.serial">Serial</label><input type="text" id="dc-s"
+                placeholder="R58M1234ABC"></div>
+            <div class="field !mb-0"><label data-i18n="device.width">Width (px)</label><input type="number" id="dc-w"
+                placeholder="1080" min="1"></div>
+            <div class="field !mb-0"><label data-i18n="device.height">Height (px)</label><input type="number" id="dc-h"
+                placeholder="2340" min="1"></div>
+          </div>
+          <button class="btn pri" onclick="saveDevice()" data-i18n="device.save">Save</button>
+          <div class="hint mt-3 text-sm text-ssm-hint" id="dc-hint"></div>
+        </div>
+
+        <div class="card">
+          <div class="ct" data-i18n="jitter.title">Humanization (Jitter)</div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="jitter.timing">Timing ±ms</span>
+            <input type="range" id="sld-timing" min="0" max="200" step="1" value="0" oninput="onJitter('timing')">
+            <span class="jitter-val text-ssm-hint" id="val-timing">OFF</span>
+          </div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="jitter.position">Position ±%</span>
+            <input type="range" id="sld-position" min="0" max="10" step="1" value="0" oninput="onJitter('position')">
+            <span class="jitter-val text-ssm-hint" id="val-position">OFF</span>
+          </div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="jitter.tapDur">Tap duration ±ms</span>
+            <input type="range" id="sld-tapDur" min="0" max="40" step="1" value="0" oninput="onJitter('tapDur')">
+            <span class="jitter-val text-ssm-hint" id="val-tapDur">OFF</span>
+          </div>
+          <div class="jitter-hint text-xs text-ssm-hint mt-2" data-i18n="jitter.hint"></div>
+        </div>
+
+        <div class="card">
+          <div class="ct" data-i18n="settings.advanced">Advanced Parameters</div>
+          <div class="text-[11px] text-ssm-hint mb-4" data-i18n="settings.advanced.hint"></div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="settings.tapDuration">Tap Duration (ms)</span>
+            <input type="range" id="sld-tapDuration" min="1" max="50" step="1" value="10"
+              oninput="onAdvanced('tapDuration')">
+            <span class="jitter-val !text-ssm-blue" id="val-tapDuration">10</span>
+          </div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="settings.flickDuration">Flick Duration (ms)</span>
+            <input type="range" id="sld-flickDuration" min="5" max="120" step="1" value="60"
+              oninput="onAdvanced('flickDuration')">
+            <span class="jitter-val !text-ssm-blue" id="val-flickDuration">60</span>
+          </div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="settings.flickReportInterval">Flick Report Interval (ms)</span>
+            <input type="range" id="sld-flickReportInterval" min="1" max="20" step="1" value="5"
+              oninput="onAdvanced('flickReportInterval')">
+            <span class="jitter-val !text-ssm-blue" id="val-flickReportInterval">5</span>
+          </div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="settings.slideReportInterval">Slide Report Interval (ms)</span>
+            <input type="range" id="sld-slideReportInterval" min="1" max="30" step="1" value="10"
+              oninput="onAdvanced('slideReportInterval')">
+            <span class="jitter-val !text-ssm-blue" id="val-slideReportInterval">10</span>
+          </div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="settings.flickFactor">Flick Factor</span>
+            <input type="range" id="sld-flickFactor" min="5" max="50" step="1" value="20"
+              oninput="onAdvanced('flickFactor')">
+            <span class="jitter-val !text-ssm-blue" id="val-flickFactor">0.20</span>
+          </div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="settings.flickPow">Flick Curve Exponent</span>
+            <input type="range" id="sld-flickPow" min="5" max="30" step="1" value="10" oninput="onAdvanced('flickPow')">
+            <span class="jitter-val !text-ssm-blue" id="val-flickPow">1.0</span>
+          </div>
+          <div class="text-center mt-4">
+            <button class="btn" onclick="resetAdvanced()" data-i18n="settings.defaults">Reset to Defaults</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct" data-i18n="finish.title">Finish Early</div>
+          <div class="text-[11px] text-ssm-hint mb-4" data-i18n="finish.hint">Stop before the last notes to avoid full combo.</div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="finish.enable">Enable</span>
+            <input type="checkbox" id="no-fullcombo" class="w-4 h-4" onchange="onFinishParam()">
+            <span class="jitter-val !text-ssm-blue" id="val-no-fullcombo">OFF</span>
+          </div>
+          <div class="jitter-row">
+            <span class="jitter-label" data-i18n="finish.ms">End early (ms)</span>
+            <input type="range" id="sld-end-early" min="0" max="5000" step="50" value="0" oninput="onFinishParam()">
+            <span class="jitter-val !text-ssm-blue" id="val-end-early">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-play">
+        <div class="pg-title" data-i18n="nav.play">Play Control</div>
+
+        <div class="player-deck">
+          <div class="pd-none" id="pn-none">
+            <div class="text-4xl mb-3 opacity-30">♪</div>
+            <div data-i18n="play.none">No song loaded.</div>
+          </div>
+
+          <div id="pn-loaded" style="display:none">
+
+            <div class="pd-info">
+              <div class="pd-jacket-wrap" id="pn-jacket-wrap">
+                <div class="pd-jacket">
+                  <img id="pn-img" src="" alt=""
+                    onerror="this.style.display='none';document.getElementById('pn-no').style.display='flex'">
+                  <div class="pn-no text-6xl font-bold text-ssm-muted" id="pn-no" style="display:none">♪</div>
+                </div>
+              </div>
+              <div class="pd-meta">
+                <div class="pd-title" id="pn-title-big"></div>
+                <div class="pd-artist" id="pn-artist-big"></div>
+                <div class="pd-badges">
+                  <span class="np-diff" id="pn-diff-badge"></span>
+                  <span class="pn-lv" id="pn-lv-big"></span>
+                  <div class="pd-state">
+                    <span class="dot" id="pn-dot"></span>
+                    <span id="pn-state-label" class="text-xs">Ready</span>
+                  </div>
+                </div>
+              </div>
+              <button class="pd-change-btn" onclick="navToSearch()" data-i18n="play.change">Change</button>
+            </div>
+
+            <div class="pd-actions-sec">
+              <div class="pd-actions-row">
+                <button class="pd-btn-stop" onclick="apiStop()" title="Stop"></button>
+                <button class="pd-btn-start" id="btn-start" onclick="apiStart()" disabled data-i18n="play.start.btn">▶
+                  START</button>
+              </div>
+
+              <div class="card vision-card mt-4 !bg-[#1c1c1f] !border-ssm-border/40">
+                <div class="ct flex items-center justify-between !mb-2">
+                  <span class="text-xs font-bold text-ssm-muted" data-i18n="vision.title">Vision Auto-Start</span>
+                  <button id="vision-detect-btn"
+                    class="text-[10px] bg-[#27272a] text-amber-300 hover:bg-amber-500 hover:text-black px-2 py-1 rounded border border-[#3f3f46] transition-all font-bold active:scale-95"
+                    onclick="toggleVisionDetect()">
+                    <span data-i18n="vision.detect.start">Start Detect</span>
+                  </button>
+                </div>
+                
+                <div class="vision-preview-container relative w-full max-w-[640px] mx-auto aspect-video bg-black rounded-lg overflow-hidden border border-ssm-border/50">
+                  <img id="vision-screen" class="w-full h-full object-contain" src="" style="display:none">
+                  <canvas id="vision-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
+                  <div id="vision-idle" class="absolute inset-0 flex flex-col items-center justify-center text-ssm-muted bg-[#0a0a0a]">
+                    <span class="text-2xl mb-2">📷</span>
+                    <span class="text-[10px]" data-i18n="vision.idle">Camera standby</span>
+                  </div>
+                </div>
+
+                <div class="vision-controls mt-3 space-y-2">
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="text-ssm-hint" data-i18n="vision.y">Detection Y</span>
+                    <input type="range" id="sld-vision-y" class="w-32 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer" min="0.5" max="0.95" step="0.01" value="0.85" oninput="onVisionParam()">
+                    <span class="text-ssm-blue w-8 text-right" id="val-vision-y">85%</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="text-ssm-hint" data-i18n="vision.sens">Sensitivity</span>
+                    <input type="range" id="sld-vision-sens" class="w-32 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer" min="0.05" max="0.5" step="0.01" value="0.15" oninput="onVisionParam()">
+                    <span class="text-ssm-blue w-8 text-right" id="val-vision-sens">15%</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="text-ssm-hint" data-i18n="vision.x">Detection X</span>
+                    <input type="range" id="sld-vision-x" class="w-32 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer" min="0.20" max="0.80" step="0.01" value="0.50" oninput="onVisionParam()">
+                    <span class="text-ssm-blue w-8 text-right" id="val-vision-x">50%</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="text-ssm-hint" data-i18n="vision.gap">Lane spacing</span>
+                    <input type="range" id="sld-vision-gap" class="w-32 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer" min="0.08" max="0.20" step="0.005" value="0.145" oninput="onVisionParam()">
+                    <span class="text-ssm-blue w-8 text-right" id="val-vision-gap">14%</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px]">
+                    <span class="text-ssm-hint" data-i18n="vision.delay">Start delay</span>
+                    <input type="range" id="sld-vision-delay" class="w-32 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer" min="0" max="800" step="10" value="0" oninput="onVisionParam()">
+                    <span class="text-ssm-blue w-8 text-right" id="val-vision-delay">0ms</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ins-group">
+                <span class="ins-label">PLAY</span>
+                <kbd>Enter</kbd> <span class="ins-sep">/</span> <kbd>Space</kbd>
+              </div>
+            </div>
+
+            <div class="pd-offset-sec">
+              <div class="pd-offset-container">
+                <div class="pd-offset-header">
+                  <div class="flex items-center gap-2">
+                    <span data-i18n="play.offset.title">Offset Adjustment</span>
+
+                  </div>
+                  <button class="text-blue-400 hover:text-blue-300 font-bold text-[11px]" onclick="resetOff()"
+                    data-i18n="play.offset.reset">Reset</button>
+                </div>
+                <div class="pd-offset-bar">
+                  <button onclick="adj(-100)" title="-100ms">«</button>
+                  <button onclick="adj(-50)" title="-50ms">‹‹</button>
+                  <button onclick="adj(-10)" title="-10ms">‹</button>
+
+                  <div class="pd-offset-val">
+                    <span id="ov">0</span><small>ms</small>
+                  </div>
+
+                  <button onclick="adj(10)" title="+10ms">›</button>
+                  <button onclick="adj(50)" title="+50ms">››</button>
+                  <button onclick="adj(100)" title="+100ms">»</button>
+                </div>
+                <div class="ins-group ins-group-hints">
+                  <div class="hidden md:flex gap-1 items-center ml-2">
+                    <kbd>←</kbd><kbd>→</kbd> <span class="text-[9px]">Offset</span>
+                  </div>
+                  <span><kbd class="!bg-transparent !shadow-none">Shift</kbd> ±50ms</span>
+                  <span><kbd class="!bg-transparent !shadow-none">Ctrl</kbd> ±100ms</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="log" id="play-log"></div>
+      </div>
+
+      <div class="pane" id="pane-extract">
+        <div class="pg-title" data-i18n="nav.extract">Extract Assets</div>
+
+        <div class="card">
+          <div class="ct" data-i18n="extract.title">Extract from game folder</div>
+          <div class="step flex items-start gap-3 mb-3">
+            <div
+              class="sn w-6 h-6 bg-[#333] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+              1</div>
+            <div class="st text-sm text-ssm-muted" data-i18n="extract.step1">Locate your game data folder.</div>
+          </div>
+          <div class="step flex items-start gap-3 mb-4">
+            <div
+              class="sn w-6 h-6 bg-[#333] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+              2</div>
+            <div class="st text-sm text-ssm-muted" data-i18n="extract.step2">Enter the full path below.</div>
+          </div>
+          <div class="field mt-6">
+            <label data-i18n="extract.path">Asset folder path</label>
+            <input type="text" id="ex-path" placeholder="./gamedata">
+          </div>
+          <button class="btn pri" onclick="doExtract()" data-i18n="extract.btn">Extract</button>
+          <div class="log" id="ex-log"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+
+</html>
